@@ -15,14 +15,21 @@ sentence level stats.
 Author: Waqas Younas
 Email: waqas.younas@gmail.com
 """
-import operator
 import itertools
-import nltk
-from nltk.corpus import cmudict
+import operator
 from functools import lru_cache
-from homer.utils import FleschReading, DaleChall
-from homer.constants import INTENSIFIERS, COMPULSIVE_HEDGERS, VAGUE_WORDS, MAX_WORDS_IN_SENTENCE,\
-    MAX_SENTENCES_IN_PARAGRAPH, WORDS_ONE_READS_PER_MINUTE
+
+import nltk
+from homer.constants import (
+    COMPULSIVE_HEDGERS,
+    INTENSIFIERS,
+    MAX_SENTENCES_IN_PARAGRAPH,
+    MAX_WORDS_IN_SENTENCE,
+    VAGUE_WORDS,
+    WORDS_ONE_READS_PER_MINUTE,
+)
+from homer.utils import DaleChall, FleschReading
+from nltk.corpus import cmudict
 
 
 class Word(object):
@@ -34,8 +41,13 @@ class Word(object):
     - https://litlab.stanford.edu/LiteraryLabPamphlet9.pdf
     """
 
-    def __init__(self, word, intensifiers=INTENSIFIERS, compulsive_hedgers=COMPULSIVE_HEDGERS,
-                 vague_words=VAGUE_WORDS):
+    def __init__(
+        self,
+        word,
+        intensifiers=INTENSIFIERS,
+        compulsive_hedgers=COMPULSIVE_HEDGERS,
+        vague_words=VAGUE_WORDS,
+    ):
         self.syllables = None
         self.word = word.strip().lower()
         self.intensifiers = intensifiers
@@ -43,8 +55,8 @@ class Word(object):
         self.vague_words = vague_words
 
     def is_and(self):
-            word_and = 'and'
-            return self.word == word_and
+        word_and = "and"
+        return self.word == word_and
 
     def is_compulsive_hedger(self):
         return self.word in self.compulsive_hedgers
@@ -56,7 +68,7 @@ class Word(object):
         return self.word in self.vague_words
 
     def __repr__(self):
-        return 'Word(%r)' % self.word
+        return "Word(%r)" % self.word
 
     def __str__(self):
         return self.word
@@ -71,6 +83,7 @@ class Sentence(object):
     """
     An abstraction that represents a sentence and gives various stats.
     """
+
     def __init__(self, sentence):
         self.sentence = sentence
         words = nltk.word_tokenize(sentence)
@@ -110,7 +123,7 @@ class Sentence(object):
         return len(self) == len(other)
 
     def __repr__(self):
-        return 'Sentence(%r)' % self.sentence
+        return "Sentence(%r)" % self.sentence
 
     def __str__(self):
         return self.sentence
@@ -123,11 +136,10 @@ class Paragraph(object):
     """
 
     def __init__(self, paragraph):
-        paragraph = paragraph.replace('—', ' ')
+        paragraph = paragraph.replace("—", " ")
         self.paragraph = paragraph
         self.tokenized_sentences = nltk.sent_tokenize(paragraph)
         self._sentences = [Sentence(sentence) for sentence in self.tokenized_sentences]
-
 
     @property
     def sentences(self):
@@ -143,7 +155,13 @@ class Paragraph(object):
 
     @property
     def total_and_words(self):
-        return sum([sentence.total_and_words for sentence in self.sentences if sentence.total_and_words])
+        return sum(
+            [
+                sentence.total_and_words
+                for sentence in self.sentences
+                if sentence.total_and_words
+            ]
+        )
 
     @property
     def avg_words_per_sentence(self):
@@ -160,16 +178,37 @@ class Paragraph(object):
         return DaleChall(self.paragraph).grade()
 
     def get_intensifiers(self):
-        return list(itertools.chain(*[sentence.get_intensifiers() for sentence in self.sentences
-                                                   if sentence.get_intensifiers()]))
+        return list(
+            itertools.chain(
+                *[
+                    sentence.get_intensifiers()
+                    for sentence in self.sentences
+                    if sentence.get_intensifiers()
+                ]
+            )
+        )
 
     def get_compulsive_hedgers(self):
-        return list(itertools.chain(*[sentence.get_compulsive_hedgers() for sentence in self.sentences
-                                                         if sentence.get_compulsive_hedgers()]))
+        return list(
+            itertools.chain(
+                *[
+                    sentence.get_compulsive_hedgers()
+                    for sentence in self.sentences
+                    if sentence.get_compulsive_hedgers()
+                ]
+            )
+        )
 
     def get_vague_words(self):
-        return list(itertools.chain(*[sentence.get_vague_words() for sentence in self.sentences
-                                                  if sentence.get_vague_words()]))
+        return list(
+            itertools.chain(
+                *[
+                    sentence.get_vague_words()
+                    for sentence in self.sentences
+                    if sentence.get_vague_words()
+                ]
+            )
+        )
 
     def __len__(self):
         return len(self.sentences)
@@ -184,7 +223,7 @@ class Paragraph(object):
         return len(self) == len(other)
 
     def __repr__(self):
-        return 'Paragraph(%r)' % self.paragraph
+        return "Paragraph(%r)" % self.paragraph
 
 
 class Article(object):
@@ -193,11 +232,12 @@ class Article(object):
 
     Using this, we can retrieve article as well as paragraph-level stats.
     """
+
     def __init__(self, name, author, text):
         self.name = name
         self.author = author
         # Replacing em dash and en dash
-        self.text = text.replace('—', ' ')
+        self.text = text.replace("—", " ")
         paragraphs = nltk.tokenize.blankline_tokenize(text)
         self._paragraphs = [Paragraph(paragraph) for paragraph in paragraphs]
 
@@ -211,7 +251,10 @@ class Article(object):
 
     @property
     def longest_sentence(self):
-        return max([paragraph.longest_sentence for paragraph in self._paragraphs], key=lambda sentence: len(sentence))
+        return max(
+            [paragraph.longest_sentence for paragraph in self._paragraphs],
+            key=lambda sentence: len(sentence),
+        )
 
     @property
     def len_of_longest_sentence(self):
@@ -260,20 +303,48 @@ class Article(object):
         return FleschReading(self.text).is_difficult()
 
     def get_intensifiers(self):
-        return list(itertools.chain(*(paragraph.get_intensifiers() for paragraph in self.paragraphs
-                                                   if paragraph.get_intensifiers())))
+        return list(
+            itertools.chain(
+                *(
+                    paragraph.get_intensifiers()
+                    for paragraph in self.paragraphs
+                    if paragraph.get_intensifiers()
+                )
+            )
+        )
 
     def get_vague_words(self):
-        return list(itertools.chain(*(paragraph.get_vague_words() for paragraph in self.paragraphs
-                                                  if paragraph.get_vague_words())))
+        return list(
+            itertools.chain(
+                *(
+                    paragraph.get_vague_words()
+                    for paragraph in self.paragraphs
+                    if paragraph.get_vague_words()
+                )
+            )
+        )
 
     def get_compulsive_hedgers(self):
-        return list(itertools.chain(*(paragraph.get_compulsive_hedgers() for paragraph in self.paragraphs
-                                                         if paragraph.get_compulsive_hedgers())))
+        return list(
+            itertools.chain(
+                *(
+                    paragraph.get_compulsive_hedgers()
+                    for paragraph in self.paragraphs
+                    if paragraph.get_compulsive_hedgers()
+                )
+            )
+        )
 
     def get_and_frequency(self):
         round_to_two_digits = 2
-        return str(round(self.total_and_words / self.total_words * 100, round_to_two_digits)) + " %"
+        return (
+            str(
+                round(
+                    self.total_and_words / self.total_words * 100, round_to_two_digits
+                )
+            )
+            + " %"
+        )
 
     def ten_words_with_most_syllables(self):
         """This gets us 10 words with most syllables in a text"""
@@ -284,14 +355,23 @@ class Article(object):
             word = word.strip().lower()
             if word not in syllable_data:
                 try:
-                    syllable_data[word] = [len(list(y for y in x if y[-1].isdigit())) for x in d[word]][0]
+                    syllable_data[word] = [
+                        len(list(y for y in x if y[-1].isdigit())) for x in d[word]
+                    ][0]
                 except KeyError:
                     pass  # Perhaps this word is not in the cmudict
-        return [item[0] for item in list(reversed(sorted(syllable_data.items(), key=operator.itemgetter(1))))[:10]]
+        return [
+            item[0]
+            for item in list(
+                reversed(sorted(syllable_data.items(), key=operator.itemgetter(1)))
+            )[:10]
+        ]
 
     def get_n_most_repeated_words(self, n):
         """Gets us n most repeated words in the text. """
         words = nltk.word_tokenize(self.text)
-        stopwords = nltk.corpus.stopwords.words('english')
-        all_words_except_stop = nltk.FreqDist(w.lower() for w in words if w[0].isalpha() and w not in stopwords)
+        stopwords = nltk.corpus.stopwords.words("english")
+        all_words_except_stop = nltk.FreqDist(
+            w.lower() for w in words if w[0].isalpha() and w not in stopwords
+        )
         return [word for word, freq in all_words_except_stop.most_common(n)]
